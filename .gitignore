@@ -1,0 +1,32 @@
+# 環境変数
+.env
+
+# ドキュメント
+docs/no-push/
+docs/MyポケットBackup/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+cdk.out/
+
+# Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+Pods/
+.idea/
+.symlinks/
+.gradle/
+pubspec.lock
+
+# IDE
+.vscode/
+*.iml
+
+# ffmpeg Layer バイナリ(サイズ大。デプロイ前に scripts/fetch-ffmpeg.sh で取得)
+backend/layers/ffmpeg/bin/ffmpeg

@@ -1,0 +1,67 @@
+name: Deploy Backend & Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'web/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    name: CDK Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --- Web (React) をビルドして web/dist を作る ---
+      # CDK の FrontendConstruct が web/dist を検出して S3 にデプロイする。
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build web
+        working-directory: web
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_WEB_CLIENT_ID: ${{ secrets.VITE_COGNITO_WEB_CLIENT_ID }}
+          VITE_COGNITO_REGION: ap-northeast-1
+        run: npm run build
+
+      # --- Backend (CDK) ---
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      # ffmpeg Layer 用バイナリを取得(git管理外)
+      - name: Fetch ffmpeg binary
+        working-directory: backend
+        run: bash scripts/fetch-ffmpeg.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: CDK Bootstrap
+        working-directory: backend
+        run: npx cdk bootstrap
+
+      - name: CDK Deploy
+        working-directory: backend
+        run: npx cdk deploy --require-approval never --outputs-file cdk-outputs.json
+
+      - name: Show deploy outputs
+        working-directory: backend
+        run: cat cdk-outputs.json

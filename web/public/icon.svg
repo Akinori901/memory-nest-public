@@ -1,0 +1,50 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5B86E5"/>
+      <stop offset="1" stop-color="#36D1DC"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="256" y1="300" x2="256" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF7A9A"/>
+      <stop offset="1" stop-color="#FF5277"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 角丸背景（青→シアン グラデーション） -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- 写真フレーム（白い角丸カード） -->
+  <rect x="112" y="132" width="288" height="216" rx="28" fill="#FFFFFF"/>
+
+  <!-- 空（太陽） -->
+  <circle cx="176" cy="196" r="26" fill="#FFD25A"/>
+
+  <!-- 山並み（写真の中の風景） -->
+  <path d="M112 320
+           L188 234
+           L238 292
+           L300 210
+           L400 320
+           Z"
+        fill="#7FD1C9"/>
+  <path d="M112 320
+           L300 210
+           L400 320
+           Z"
+        fill="#5FBFB6" opacity="0.9"/>
+
+  <!-- フレーム下端をカードの角丸でクリップするためのマスク的白帯 -->
+  <rect x="112" y="320" width="288" height="28" rx="0" fill="#FFFFFF"/>
+  <rect x="112" y="132" width="288" height="216" rx="28" fill="none"/>
+
+  <!-- ハート（思い出＝愛情を込めて保存） -->
+  <path d="M256 388
+           c-8 -7 -46 -34 -60 -58
+           c-11 -19 -3 -44 20 -50
+           c15 -4 30 3 40 16
+           c10 -13 25 -20 40 -16
+           c23 6 31 31 20 50
+           c-14 24 -52 51 -60 58 Z"
+        fill="url(#heart)"
+        stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round"/>
+</svg>
