@@ -1,6 +1,17 @@
 # Memory Nest
 
-子どもの写真・動画を安全に保存する「絶対に消えない思い出アプリ」
+**子どもの写真・動画を安全に保存する「絶対に消えない思い出アプリ」。**
+
+家族の写真・動画を Amazon S3 に集約し、Flutter 製のモバイル/デスクトップアプリと React 製の Web から、同じデータへアクセスできるようにするサーバーレス構成のアプリです。インフラは AWS CDK でコード管理し、認証は Cognito、メタデータは DynamoDB に置いています。
+
+<p>
+  <img alt="Flutter / Dart" src="https://img.shields.io/badge/Flutter-Dart-02569B?logo=flutter&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React_19-TypeScript-61DAFB?logo=react&logoColor=black">
+  <img alt="AWS CDK" src="https://img.shields.io/badge/IaC-AWS_CDK-232F3E?logo=amazonwebservices&logoColor=white">
+  <img alt="Serverless" src="https://img.shields.io/badge/Backend-Lambda_/_API_Gateway-FF9900?logo=awslambda&logoColor=white">
+  <img alt="Auth / Storage" src="https://img.shields.io/badge/Cognito_/_S3_/_DynamoDB-527FFF?logo=amazons3&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-green">
+</p>
 
 ## 技術スタック
 
