@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { success, error, getUserId } from "../shared/types";
+import { signUrl } from "../shared/cf-signer";
 import { ddb } from "../shared/clients";
 
 const TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
@@ -113,16 +114,25 @@ export async function handler(event: APIGatewayProxyEvent) {
     lastKey = result.LastEvaluatedKey;
   }
 
-  const items = collected.slice(0, limit).map((item) => ({
-    ...item,
-    viewUrl: `https://${CLOUDFRONT_DOMAIN}/${item.s3Key}`,
-    ...(item.thumbnailKey
-      ? { thumbnailUrl: `https://${CLOUDFRONT_DOMAIN}/${item.thumbnailKey}` }
-      : {}),
-    ...(item.mp4Key
-      ? { mp4Url: `https://${CLOUDFRONT_DOMAIN}/${item.mp4Key}` }
-      : {}),
-  }));
+  // CloudFront は署名を必須にしてあるので、URL は必ず署名して返す。
+  // 一覧なので枚数分の署名を作るが、秘密鍵は使い回されるため
+  // SSM への問い合わせはコンテナごとに 1 回で済む。
+  const items = await Promise.all(
+    collected.slice(0, limit).map(async (item) => ({
+      ...item,
+      viewUrl: await signUrl(`https://${CLOUDFRONT_DOMAIN}/${item.s3Key}`),
+      ...(item.thumbnailKey
+        ? {
+            thumbnailUrl: await signUrl(
+              `https://${CLOUDFRONT_DOMAIN}/${item.thumbnailKey}`
+            ),
+          }
+        : {}),
+      ...(item.mp4Key
+        ? { mp4Url: await signUrl(`https://${CLOUDFRONT_DOMAIN}/${item.mp4Key}`) }
+        : {}),
+    }))
+  );
 
   let nextCursor: string | null = null;
   if (collected.length > limit) {

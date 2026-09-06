@@ -14,10 +14,15 @@ import * as path from "path";
 import { Construct } from "constructs";
 
 interface ApiConstructProps {
-  userPool: cognito.UserPool;
+  // fromUserPoolId が返すのは IUserPool。Authorizer はこれで足りる。
+  userPool: cognito.IUserPool;
   mediaTable: dynamodb.Table;
   mediaBucket: s3.Bucket;
   cloudfrontDomain: string;
+  /** 署名付き URL に使う CloudFront 公開鍵 ID */
+  signingPublicKeyId: string;
+  /** 秘密鍵を置いた SSM パラメータ名（SecureString） */
+  signingPrivateKeyParam: string;
   /** 撮影日ソートGSIを使うか。既存データ移行が済むまでは false。 */
   useCapturedIndex?: boolean;
 }
@@ -79,6 +84,10 @@ export class ApiConstruct extends Construct {
         // 撮影日ソートGSIの使用フラグ。既存データへの capturedSk 後付け(移行)が
         // 済むまでは "0"(旧ロジック)にし、移行完了後に "1" へ切り替える。
         USE_CAPTURED_INDEX: props.useCapturedIndex ? "1" : "0",
+        // CloudFront 署名付き URL。秘密鍵は SSM から実行時に読む
+        // （環境変数に入れると Lambda の設定画面から平文で見えてしまう）。
+        CF_KEY_PAIR_ID: props.signingPublicKeyId,
+        CF_PRIVATE_KEY_PARAM: props.signingPrivateKeyParam,
       },
       bundling: {
         minify: true,
@@ -90,6 +99,20 @@ export class ApiConstruct extends Construct {
     props.mediaTable.grantReadWriteData(apiFn);
     props.mediaBucket.grantReadWrite(apiFn);
     props.mediaBucket.grantDelete(apiFn);
+
+    // 署名用の秘密鍵を読む。値は Terraform/CDK では管理しない。
+    apiFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ssm:GetParameter"],
+        resources: [
+          cdk.Stack.of(this).formatArn({
+            service: "ssm",
+            resource: "parameter",
+            resourceName: props.signingPrivateKeyParam.replace(/^\//, ""),
+          }),
+        ],
+      })
+    );
 
     const integration = new apigateway.LambdaIntegration(apiFn);
 

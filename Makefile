@@ -1,12 +1,9 @@
 .PHONY: help setup up down restart api app app-ios app-macos app-chrome app-prod install install-backend install-app install-web web web-build web-lint deploy bootstrap synth logs clean
 
-# AWS デプロイ後の設定（cdk deploy の Output 値を各自入力）
-#   ApiUrl              -> API_BASE_URL
-#   UserPoolId          -> USER_POOL_ID
-#   UserPoolClientId    -> CLIENT_ID (Flutter アプリ用)
+# AWS デプロイ済み設定
 API_BASE_URL = https://YOUR_API_ID.execute-api.ap-northeast-1.amazonaws.com/prod
-USER_POOL_ID = ap-northeast-1_XXXXXXXXX
-CLIENT_ID = xxxxxxxxxxxxxxxxxxxxxxxxxx
+USER_POOL_ID ?= ap-northeast-1_XXXXXXXXX
+CLIENT_ID ?= xxxxxxxxxxxxxxxxxxxxxxxxxx
 DART_DEFINES = --dart-define=API_BASE_URL=$(API_BASE_URL) --dart-define=USER_POOL_ID=$(USER_POOL_ID) --dart-define=CLIENT_ID=$(CLIENT_ID)
 
 # デフォルト

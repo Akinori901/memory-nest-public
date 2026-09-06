@@ -1,12 +1,11 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { success, error, getUserId } from "../shared/types";
-import { s3, ddb } from "../shared/clients";
+import { ddb } from "../shared/clients";
+import { signUrl } from "../shared/cf-signer";
 
 const TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
-const BUCKET_NAME = process.env.MEDIA_BUCKET_NAME!;
+const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
 
 export async function handler(event: APIGatewayProxyEvent) {
   const userId = getUserId(event);
@@ -29,10 +28,11 @@ export async function handler(event: APIGatewayProxyEvent) {
     return error(404, "Media not found");
   }
 
-  const viewUrl = await getSignedUrl(
-    s3,
-    new GetObjectCommand({ Bucket: BUCKET_NAME, Key: item.s3Key as string }),
-    { expiresIn: 3600 }
+  // 一覧（get-media）と同じく CloudFront 経由の署名付き URL を返す。
+  // S3 の署名付き URL でも見られるが、CDN を経由しないので
+  // キャッシュが効かず、同じ画像でも配信が遅く高くつく。
+  const viewUrl = await signUrl(
+    `https://${CLOUDFRONT_DOMAIN}/${item.s3Key as string}`
   );
 
   return success({ media: item, viewUrl });

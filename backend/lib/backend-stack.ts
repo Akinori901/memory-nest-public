@@ -15,14 +15,24 @@ export class BackendStack extends cdk.Stack {
     const frontend = new FrontendConstruct(this, "Frontend");
     const webOrigin = `https://${frontend.distribution.distributionDomainName}`;
 
+    // 認証は共通基盤 qol-user-pool に統合済み。
+    // プールとクライアントは別リポジトリ（QOL/qol-user-pool）が
+    // Terraform で管理しているので、ここでは ID を参照するだけ。
     const auth = new AuthConstruct(this, "Auth", {
-      webCallbackUrls: [
-        `${webOrigin}/auth/callback`,
-        "http://localhost:3000/auth/callback",
-      ],
-      webLogoutUrls: [`${webOrigin}/login`, "http://localhost:3000/login"],
+      userPoolId:
+        this.node.tryGetContext("userPoolId") ?? "ap-northeast-1_XXXXXXXXX",
+      appClientId: this.node.tryGetContext("appClientId") ?? "",
+      webClientId: this.node.tryGetContext("webClientId") ?? "",
     });
-    const storage = new StorageConstruct(this, "Storage");
+    // 署名付き URL 用のキーグループ。鍵は CLI で作成済み（秘密鍵は SSM）。
+    // 環境ごとに違うので context で上書きできるようにしておく。
+    const signingKeyGroupId =
+      this.node.tryGetContext("signingKeyGroupId") ??
+      "YOUR_KEY_GROUP_ID";
+
+    const storage = new StorageConstruct(this, "Storage", {
+      signingKeyGroupId,
+    });
     const database = new DatabaseConstruct(this, "Database");
     // 撮影日ソートGSIの使用フラグ。
     // 既存データ移行(capturedSk後付け)は完了済みのため、デフォルトで有効。
@@ -32,6 +42,9 @@ export class BackendStack extends cdk.Stack {
       this.node.tryGetContext("useCapturedIndex") !== false;
 
     const api = new ApiConstruct(this, "Api", {
+      signingPublicKeyId:
+        this.node.tryGetContext("signingPublicKeyId") ?? "K3G0EIW6G28OU6",
+      signingPrivateKeyParam: "/memory-nest/cloudfront/private-key",
       userPool: auth.userPool,
       mediaTable: database.mediaTable,
       mediaBucket: storage.mediaBucket,
@@ -49,11 +62,11 @@ export class BackendStack extends cdk.Stack {
       description: "Cognito User Pool ID",
     });
     new cdk.CfnOutput(this, "UserPoolClientId", {
-      value: auth.userPoolClient.userPoolClientId,
+      value: auth.userPoolClientId,
       description: "Cognito User Pool Client ID (Flutter app)",
     });
     new cdk.CfnOutput(this, "WebUserPoolClientId", {
-      value: auth.webUserPoolClient.userPoolClientId,
+      value: auth.webUserPoolClientId,
       description: "Cognito User Pool Client ID (Web / React)",
     });
     new cdk.CfnOutput(this, "MediaBucketName", {
