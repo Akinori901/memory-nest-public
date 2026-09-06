@@ -2,7 +2,7 @@
  * DynamoDB の userId（= Cognito sub）を新しいプールの sub に付け替える。
  *
  * memory-nest は認証を専用プール（memory-nest-users）から共通の
- * qol-user-pool に移す。プールが変わると sub も変わるが、**sub は
+ * cognito-auth-service に移す。プールが変わると sub も変わるが、**sub は
  * media テーブルのパーティションキーそのもの**なので、放置すると
  * 既存データが一切見えなくなる。
  *

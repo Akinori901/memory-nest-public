@@ -15,8 +15,8 @@ export class BackendStack extends cdk.Stack {
     const frontend = new FrontendConstruct(this, "Frontend");
     const webOrigin = `https://${frontend.distribution.distributionDomainName}`;
 
-    // 認証は共通基盤 qol-user-pool に統合済み。
-    // プールとクライアントは別リポジトリ（QOL/qol-user-pool）が
+    // 認証は共通基盤 cognito-auth-service に統合済み。
+    // プールとクライアントは別リポジトリ（Akinori901/cognito-auth-service）が
     // Terraform で管理しているので、ここでは ID を参照するだけ。
     const auth = new AuthConstruct(this, "Auth", {
       userPoolId:
